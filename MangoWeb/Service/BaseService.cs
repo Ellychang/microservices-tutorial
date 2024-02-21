@@ -9,27 +9,30 @@ namespace MangoWeb.Service
 {
     public class BaseService : IBaseService
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        public ResponseDto responseModel { get; set; }
+        public IHttpClientFactory httpClient { get; set; }
 
         public BaseService(IHttpClientFactory httpClientFactory)
         {
-            _httpClientFactory = httpClientFactory;
+            httpClient = httpClientFactory;
+            responseModel = new ResponseDto();
         }
 
         public async Task<ResponseDto?> SendAsyc(RequestDto requestDto)
         {
             try
             {
-                HttpClient httpClient = _httpClientFactory.CreateClient("MangoAPI");
+                var client = httpClient.CreateClient("MangoAPI");
                 HttpRequestMessage message = new HttpRequestMessage();
                 message.Headers.Add("Accept", "application/json");
 
                 message.RequestUri = new Uri(requestDto.Url);
+
                 if (requestDto.Data != null)
                     message.Content = new StringContent(JsonConvert.SerializeObject(requestDto.Data),
                         Encoding.UTF8, "application/json");
 
-                HttpResponseMessage response = null;
+                HttpResponseMessage apiResponse = null;
 
                 switch (requestDto.ApiType)
                 {
@@ -48,9 +51,9 @@ namespace MangoWeb.Service
 
                 }
 
-                response = await httpClient.SendAsync(message);
+                apiResponse = await client.SendAsync(message);
 
-                switch (response.StatusCode)
+                switch (apiResponse.StatusCode)
                 {
                     case HttpStatusCode.NotFound:
                         return new() { IsSuccess = false, Message = "Not found" };
@@ -61,15 +64,20 @@ namespace MangoWeb.Service
                     case HttpStatusCode.InternalServerError:
                         return new() { IsSuccess = false, Message = "Internal server error" };
                     default:
-                        var apiContent = await response.Content.ReadAsStringAsync();
+                        var apiContent = await apiResponse.Content.ReadAsStringAsync();
                         var responseDto = JsonConvert.DeserializeObject<ResponseDto>(apiContent);
                         return responseDto;
 
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                var dto = new ResponseDto
+                { 
+                    Message = ex.Message,
+                    IsSuccess = false
+                };
+                return dto;
             }
 
         }

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace coupon.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/coupon")]
     [ApiController]
     public class CouponApiController : ControllerBase
     {
@@ -115,8 +115,7 @@ namespace coupon.Controllers
             catch (Exception ex)
             {
 
-                _responseDto
-                     .IsSuccess = false;
+                _responseDto.IsSuccess = false;
                 _responseDto.Message = ex.Message;
             }
 
@@ -124,6 +123,7 @@ namespace coupon.Controllers
         }
 
         [HttpDelete]
+        [Route("{id:int}")]
         public ResponseDto delete(int id)
         {
             try
@@ -135,8 +135,7 @@ namespace coupon.Controllers
             catch (Exception ex)
             {
 
-                _responseDto
-                     .IsSuccess = false;
+                _responseDto.IsSuccess = false;
                 _responseDto.Message = ex.Message;
             }
 
